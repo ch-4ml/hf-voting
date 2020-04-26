@@ -1,114 +1,86 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, Button, PermissionsAndroid, TouchableNativeFeedback, Platform, TextInput } from 'react-native';
+import RNFS from 'react-native-fs';
+import RNFetchBlob from 'react-native-fetch-blob';
+import { unzip } from 'react-native-zip-archive';
 
-import React from 'react';
-import {
-  SafeAreaView,
-  StyleSheet,
-  ScrollView,
-  View,
-  Text,
-  StatusBar,
-} from 'react-native';
+const documentPath = RNFS.DownloadDirectoryPath + '/wallet'
+const registerURL = 'http://fetch1.ddns.net:3000/register'
 
-import {
-  Header,
-  LearnMoreLinks,
-  Colors,
-  DebugInstructions,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+requestStoragePermission = async() => {
+  const res = await PermissionsAndroid.request(
+    PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE, {
+      title: 'Read External Storage Permission',
+      message: 'This app needs access to your external storage'
+    }
+  )
+  const wes = await PermissionsAndroid.request(
+    PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE, {
+      title: 'Write External Storage Permission',
+      message: 'This app needs access to your external storage'
+    }
+  )
+}
 
-const App: () => React$Node = () => {
+checkStoragePermission = () => {
+  if(Platform.OS === 'android') {
+    requestStoragePermission();
+  }
+}
+
+registerWallet = async (walletName) => {
+  const dirs = RNFetchBlob.fs.dirs.DownloadDir + '/wallet'
+  const path = dirs + `/${walletName}.zip`
+
+  RNFetchBlob
+  .config({
+    path: path,
+  })
+  .fetch('GET', registerURL)
+  .then(file => {
+    console.log(`wallet file 다운로드 성공: ${file.path()}`)
+    this.unzipFile(file)
+  })
+  .catch((err, status) => {
+    console.log(`${status}: ${err}`)
+  })
+}
+
+unzipFile = (file) => {
+  const filePath = file.path()
+  const walletName = filePath.substring(filePath.lastIndexOf('/') + 1, filePath.lastIndexOf('.'))
+  unzip(filePath, documentPath + `/${walletName}`)
+  .then(path => {
+    console.log(`unzip 성공: ${path}`)
+  })
+}
+
+export default function App() {
+
+  const [walletName, setWalletName] = useState('')
+
   return (
-    <>
-      <StatusBar barStyle="dark-content" />
-      <SafeAreaView>
-        <ScrollView
-          contentInsetAdjustmentBehavior="automatic"
-          style={styles.scrollView}>
-          <Header />
-          {global.HermesInternal == null ? null : (
-            <View style={styles.engine}>
-              <Text style={styles.footer}>Engine: Hermes</Text>
-            </View>
-          )}
-          <View style={styles.body}>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Step One</Text>
-              <Text style={styles.sectionDescription}>
-                Edit <Text style={styles.highlight}>App.js</Text> to change this
-                screen and then come back to see your edits.
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>See Your Changes</Text>
-              <Text style={styles.sectionDescription}>
-                <ReloadInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Debug</Text>
-              <Text style={styles.sectionDescription}>
-                <DebugInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Learn More</Text>
-              <Text style={styles.sectionDescription}>
-                Read the docs to discover what to do next:
-              </Text>
-            </View>
-            <LearnMoreLinks />
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </>
+    <View
+      style={styles.container}
+      onload={checkStoragePermission}>
+      <Text>지갑 이름을 입력하세요.</Text>
+      <TextInput
+        label='Wallet'
+        value={ walletName }
+        onChangeText={ text => setWalletName(text) }>
+      </TextInput>
+      <Button 
+        title="Register"
+        onPress={ () => registerWallet(walletName) } />
+    </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  scrollView: {
-    backgroundColor: Colors.lighter,
-  },
-  engine: {
-    position: 'absolute',
-    right: 0,
-  },
-  body: {
-    backgroundColor: Colors.white,
-  },
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: Colors.black,
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-    color: Colors.dark,
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-  footer: {
-    color: Colors.dark,
-    fontSize: 12,
-    fontWeight: '600',
-    padding: 4,
-    paddingRight: 12,
-    textAlign: 'right',
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
-
-export default App;
