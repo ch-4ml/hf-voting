@@ -6,7 +6,7 @@ import { unzip } from 'react-native-zip-archive';
 
 // android: DownloadDirectoryPath, ExternalDirectoryPath, ExternalStorageDirectoryPath
 const documentPath = RNFS.DownloadDirectoryPath + '/wallet';
-const registerURL = 'http://fetch2.ddns.net:3000/register'
+const registerURL = 'http://fetch3.ddns.net:3000/register'
 
 unzipFile = (file) => {
   const filePath = file.path()

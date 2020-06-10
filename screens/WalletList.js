@@ -14,7 +14,7 @@ query = async (title) => {
       if(file.name.indexOf('-') === -1) id = file.name;
     });
 
-    const response = await RNFetchBlob.fetch('POST', 'http://fetch2.ddns.net:3000/query', {
+    const response = await RNFetchBlob.fetch('POST', 'http://fetch3.ddns.net:3000/query', {
       'Content-Type': 'multipart/form-data'
     }, [{ name: 'file', filename: `${id}.zip`, type: 'application/zip', data: RNFetchBlob.wrap(`${walletPath}/${title}.zip`) }])
     const json = await(response.json());
@@ -26,7 +26,6 @@ query = async (title) => {
 }
 
 Item = ({title, navigation}) => {
-  console.log(`query(title): ${JSON.stringify(query(title))}`);
 
   return (
     <TouchableOpacity
